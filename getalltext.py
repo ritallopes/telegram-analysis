@@ -1,9 +1,21 @@
 #!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
 """
 A program to extract raw text from Telegram chat log
 """
 import argparse
 from json import loads
+import pandas as pd
+
+def search_event(df, usernames, no_newlines):
+    if no_newlines:
+        df['text'] = df['text'].str.replace(r'\n+','')
+    if usernames:
+        df[['text', 'from']].apply(lambda line: print('@'+line['from']+': '+line['text']), axis=1)
+    else:
+        df['text'].str.encode('mbcs').str.decode('utf-8').apply(print)
+
+
 
 def main():
 
@@ -21,20 +33,12 @@ def main():
     args=parser.parse_args()
     filepath = args.filepath
     
-    with open(filepath, 'r', encoding="mbcs") as jsonfile:
-        events = (loads(line) for line in jsonfile)
-        for event in events:
-            #check the event is the sort we're looking for
-            if "from" in event and "text" in event:
-                if args.usernames:
-                    if 'username' in event['from']:
-                        print('@' + event['from']['username'],end=': ') 
-                    else:
-                        print('@',end=': ')
-                if args.no_newlines:
-                    print(event['text'].replace('\n',''))
-                else:
-                    print(event["text"])
+
+    chatdf = pd.read_json(filepath, encoding="mbcs")
+    
+    search_event(chatdf[["from", "from_id", "text"]], usernames=args.usernames, no_newlines=args.no_newlines)
+
+
 
 if __name__ == "__main__":
     main()
