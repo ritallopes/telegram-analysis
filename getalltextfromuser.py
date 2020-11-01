@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 A program to extract all text sent by a particular user from a Telegram chat log
 """
@@ -14,7 +15,7 @@ def main():
     parser.add_argument(
         'username', help='a username of the person whose text you want (without @ sign), case insensitive')
 
-    args=parser.parse_args()
+    args=parser.parse_args()                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
     filepath = args.filepath
     username = args.username.lower()
 
@@ -23,15 +24,14 @@ def main():
     #first, get the ID of the user with that username.
     #ideally, this only runs for less than 100 messages, if its a recent username
     #TODO: allow user id as argument
-    with open(filepath, 'r') as jsonfile:
+    with open(filepath, 'r', encoding='utf-8') as jsonfile:
         events = (loads(line) for line in jsonfile)
         for event in events:
         #check the event is the sort we're looking for
             if "from" in event:
-                if "username" in event["from"]:
-                    if event["from"]["username"].lower() == username:
-                        user_id = event['from']['id']
-                        break
+                if event["from"].lower() == username:
+                    user_id = event['from_id']
+                    break
     if user_id == "":
         print("username not found in chatlog")
         exit()
@@ -41,7 +41,7 @@ def main():
         for event in events:
         #check the event is the sort we're looking for
             if "from" in event and "text" in event:
-                if user_id == event["from"]["id"]:
+                if user_id == event["from_id"]:
                     print(event["text"])
 
 if __name__ == "__main__":

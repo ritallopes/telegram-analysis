@@ -20,15 +20,15 @@ def main():
 
     args=parser.parse_args()
     filepath = args.filepath
-
-    with open(filepath, 'r') as jsonfile:
+    
+    with open(filepath, 'r', encoding="mbcs") as jsonfile:
         events = (loads(line) for line in jsonfile)
         for event in events:
             #check the event is the sort we're looking for
             if "from" in event and "text" in event:
                 if args.usernames:
                     if 'username' in event['from']:
-                        print('@' + event['from']['username'],end=': ')
+                        print('@' + event['from']['username'],end=': ') 
                     else:
                         print('@',end=': ')
                 if args.no_newlines:
