@@ -66,11 +66,11 @@ Not recommended:
         figure_size = (args.figure_size[0],args.figure_size[1])
     else:
         figure_size = (14,8)
-
+    
     sortedfreqs = Counter(map(lambda x: x.rstrip().lower(),stdin)
             ) .most_common(number_of_phrases)
     #most common phrases from a counter object which takes all the lines from stdin and strips em
-
+    
     #delete all with freq 1
     sortedfreqs  = [x for x in sortedfreqs if x[1] != 1]
 
