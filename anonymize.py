@@ -22,6 +22,6 @@ def main():
 
     chatdf=pd.read_json(filepath, encoding='mbcs')
     chatdf['from'] = chatdf['from'].apply(hash)
-
+    chatdf.to_csv('chatdf.csv', sep ='\t')
 if __name__ == "__main__":
     main()
