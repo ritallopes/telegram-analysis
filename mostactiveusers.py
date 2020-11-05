@@ -9,6 +9,7 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 from datetime import date,datetime
 from operator import itemgetter
+import pandas as pd
 
 def parse_args():
     parser = argparse.ArgumentParser(description=
@@ -57,13 +58,13 @@ def get_dates(arg_dates):
     return (start_date,end_date)
 
 def extract_infos(event):
-    text_date = date.fromtimestamp(event['date'])
+    text_date = (event['date'])
     text_length = len(event['text'])
-    text_userid= event['from']['peer_id']
-    text_printname = event['from']['print_name']
+    text_userid= event['from_id']
+    text_printname = event['from']
     return text_date,text_length,text_userid,text_printname
 
-def make_ddict(jsonfile,start,end):
+def make_ddict(events,start,end):
     """
     Make a defaultdict with user IDs as keys and char count as values
     Return (dict of IDs -> names, total chars, defaultdict)
@@ -71,8 +72,7 @@ def make_ddict(jsonfile,start,end):
     names = {} #dict
     counter = defaultdict(int)
     total_datapoints = 0
-    events = (loads(line) for line in jsonfile)
-    messages = (extract_infos(event) for event in events if 'text' in event)
+    messages = events.apply(extract_infos, axis=1)
     messages = ((when,what,uid,who) for (when,what,uid,who) in messages if when >= start and when <= end)
     for (msgdate,textlength,userid,printname) in messages:
         total_datapoints += textlength
@@ -83,7 +83,6 @@ def make_ddict(jsonfile,start,end):
         if printname == "":
             names[str(userid)] = str(userid)
         counter[userid] += textlength
-
     return names,total_datapoints,counter
 
 def annotate_figure(filename):
@@ -97,11 +96,11 @@ def make_trimmed_ddict(counter,total_datapoints,names,min_percent):
     min_chars = (min_percent/100) * total_datapoints
     for person, frequency in counter.items():
         if frequency < min_chars:
-            trimmedCounter["other"] += frequency
+            trimmedCounter["others"] += frequency
         else:
-            if names[str(person)] == "other":
-                print("Someone in this chat is called 'other'. "
-                "They will be absorbed into the 'other' pie slice.")
+            if names[str(person)] == "others":
+                print("Someone in this chat is called 'others'. "
+                "They will be absorbed into the 'others' pie slice.")
             trimmedCounter[names[str(person)]] = frequency
 
     return trimmedCounter
@@ -110,7 +109,6 @@ def main():
     """
     main function
     """
-
     args = parse_args()
     filepath = args.file
     savefolder = args.output_folder
@@ -123,8 +121,8 @@ def main():
     filename = path.splitext(path.split(filepath)[-1])[0]
     #make filename just the name of the file, with no leading directories and no extension
 
-    with open(filepath, 'r') as jsonfile:
-        names,total_datapoints,counter = make_ddict(jsonfile,start_date,end_date)
+    chat = pd.read_json(filepath)
+    names,total_datapoints,counter = make_ddict(chat,start_date,end_date)
 
     trimmedCounter = make_trimmed_ddict(counter,total_datapoints,names,other_percent)
 
