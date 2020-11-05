@@ -3,26 +3,25 @@
 A program to plot the activity of a chat over 24 hours
 """
 import argparse
-from json import loads
 from datetime import date,timedelta,datetime
 from os import path
 from collections import defaultdict
 import matplotlib.pyplot as plt
 from sys import maxsize
+import pandas as pd
 
 def extract_info(event):
-       text_time = datetime.fromtimestamp(event['date']).hour
-       text_date = date.fromtimestamp(event['date'])
+       text_time = event['date'].hour
+       text_date = (event['date'])
        text_length = len(event['text'])
        return text_date, text_time, text_length
 
-def make_ddict_in_range(json_file,start,end):
+def make_ddict_in_range(events,start,end):
     """
     return a defaultdict(int) of dates with activity on those dates in a date range
     """
-    events = (loads(line) for line in json_file)
     #generator, so whole file is not put in mem
-    msg_infos = (extract_info(event) for event in events if 'text' in event)
+    msg_infos = (events.apply(extract_info, axis=1))
     msg_infos = ((date,time,length) for (date,time,length) in msg_infos if date >= start and date <= end)
     counter = defaultdict(int)
     #a dict with hours as keys and frequency as values
@@ -118,15 +117,11 @@ def main():
 
     filename = path.splitext(path.split(filepath)[-1])[0]
 
+    chat= pd.read_json(filepath)
+    chat_counter = make_ddict_in_range(chat,start_date,end_date)
+
     plt.figure(figsize=figure_size)
-
-    with open(filepath, 'r') as jsonfile:
-       chat_counter = make_ddict_in_range(
-              jsonfile,start_date,end_date)
-
-       plt.bar(*zip(*chat_counter.items()))
-
-    annotate_figure(filename)
+    plt.bar(*zip(*chat_counter.items()))
 
     if savefolder is not None:
     #if there is a given folder to save the figure in, save it there
