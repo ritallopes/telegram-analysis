@@ -9,7 +9,7 @@ import pandas as pd
 
 def search_event(df, usernames, no_newlines, fileout):
     if no_newlines:
-        df['text'] = df['text'].str.replace(r'\n+','').str.replace(r'\r+','')
+        df['text'] = df['text'].str.strip().replace(r'\n+|^\n','').str.replace(r'\n\r+','').str.replace(r'^\s*\.\W', '').str.replace(r'^\s+', '')
     if(fileout):
         if usernames:
             df[['from', 'text']].to_csv('out.txt', sep=':', header='True', index=False, encoding='mbcs')

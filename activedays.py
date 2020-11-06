@@ -12,11 +12,7 @@ from sys import maxsize
 import pandas as pd
 
 def extract_info(event):
-    text_weekday = event['date'].isoweekday()
-    text_date = event['date']
-    text_length = len(event['text'])
-    return text_date, text_weekday, text_length
-
+    return event['date'], event['date'].isoweekday(), len(event['text'])
 def make_ddict_in_range(events,start,end):
     """
     return a defaultdict(int) of dates with activity on those dates in a date range
@@ -30,7 +26,6 @@ def make_ddict_in_range(events,start,end):
     for date_text,day_text,length in msg_infos:
        counter[day_text] += length
        day_freqs[day_text] += 1
-
     for k,v in counter.items():
         counter[k] = v/day_freqs[k]
     #divide each day's activity by the number of times the day appeared.

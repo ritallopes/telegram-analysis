@@ -5,7 +5,7 @@ A program to anonymize telegram chat
 """
 import argparse
 import pandas as pd
-from cryptography.fernet import Fernet
+from collections import defaultdict
 
 
 
@@ -21,7 +21,15 @@ def main():
     filepath = args.filepath
 
     chatdf=pd.read_json(filepath, encoding='mbcs')
-    chatdf['from'] = chatdf['from'].apply(hash)
-    chatdf.to_csv('chatdf.csv', sep ='\t')
+    names = chatdf['from'].unique()
+
+    newname=defaultdict()
+    for i, name in enumerate(names):
+        newname[name] = "user_"+str(i)
+
+    chatdf['from'] = chatdf['from'].apply(lambda n_n: newname[n_n])
+
+    chatdf.to_json('anonymous.json', orient="records")
+
 if __name__ == "__main__":
     main()
