@@ -8,23 +8,16 @@ from sys import stdin
 import argparse
 import matplotlib.pyplot as plt
 from collections import Counter
+import pandas as pd
 
 def main():
     """
     main function
     """
-
     parser = argparse.ArgumentParser(
             formatter_class=argparse.RawDescriptionHelpFormatter,
-            description='Find the most commonly repeated lines and their frequencies from an input.',
-            epilog="""Example usage:
-Get all text from a chat and find the most repeated messages:
-    ./getalltext.py chat_name.jsonl | ./mostcommonphrases.py
-Find the most repeated lines in a textfile:
-    ./mostcommonphrases.py < textfile.txt
-Not recommended:
-    running this program with no arguments. This will wait for input and EOF."""
-    )
+            description='Find the most commonly repeated lines and their frequencies from an input. Enter with file .txt')
+    parser.add_argument('filepath', help='the json chatlog file to analyse')
     parser.add_argument(
             '-g','--graph',
             help='Create a bar chart showing the most common phrases',
@@ -67,17 +60,19 @@ Not recommended:
     else:
         figure_size = (14,8)
 
-    sortedfreqs = Counter(map(lambda x: x.rstrip().lower(),stdin)
-            ) .most_common(number_of_phrases)
-    #most common phrases from a counter object which takes all the lines from stdin and strips em
+    df = pd.read_csv(args.filepath, sep="\n", encoding='latin-1', header=None)
+    df = df.loc[df[0].str.contains(r'^[^\.]')]
 
+    sortedfreqs = Counter(map(lambda x: x.rstrip().lower(),df.iloc[:, 0])
+            ).most_common(number_of_phrases)
+    #most common phrases from a counter object which takes all the lines from stdin and strips em
+    
     #delete all with freq 1
     sortedfreqs  = [x for x in sortedfreqs if x[1] != 1]
 
     print(sortedfreqs) # output the list
 
     if args.graph:
-
         #now just deal with the top 10% of phrases
         sortedfreqs = sortedfreqs[:number_of_bars]
         #frequency_threshold = sortedfreqs[len(sortedfreqs)//5][1]

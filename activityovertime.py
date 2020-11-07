@@ -3,38 +3,30 @@
 A program to plot the activity in a chat over time
 """
 import argparse
-from json import loads
 from datetime import date,timedelta,datetime
 from os import path
 from collections import defaultdict
 import matplotlib.pyplot as plt
 from sys import maxsize
+import pandas as pd
 
 def extract_date_and_len(event):
-       text_date = date.fromtimestamp(event['date'])
+       text_date = (event['date'])
        text_length = len(event['text'])
        return text_date, text_length
 
-def make_ddict_in_range(json_file,binsize,start,end):
+def make_ddict_in_range(events,start,end):
     """
     return a defaultdict(int) of dates with activity on those dates in a date range
     """
-    events = (loads(line) for line in json_file)
     #generator, so whole file is not put in mem
-    dates_and_lengths = (extract_date_and_len(event) for event in events if 'text' in event)
+    dates_and_lengths = events.apply(extract_date_and_len, axis=1)
     dates_and_lengths = ((date,length) for (date,length) in dates_and_lengths if date >= start and date <= end)
     counter = defaultdict(int)
     #a dict with dates as keys and frequency as values
-    if binsize > 1:
-        #this makes binsizes ! > 1 act as 1
-        curbin = 0
-        for date_text,length in dates_and_lengths:
-            if curbin == 0 or (curbin - date_text) > timedelta(days=binsize):
-                curbin = date_text
-            counter[curbin] += length
-    else:
-        for date_text,length in dates_and_lengths:
-            counter[date_text] += length
+   
+    for date_text,length in dates_and_lengths:
+        counter[date_text] += length
 
     return counter
 
@@ -131,14 +123,8 @@ def main():
     plt.figure(figsize=figure_size)
 
     for ind,filepath in enumerate(filepaths):
-        with open(filepath, 'r') as jsonfile:
-            #if args.date_range is not None:
-            #    chat_counter = make_ddict_in_date_range(
-            #            jsonfile,binsize,start_date,end_date)
-            #else:
-            #    chat_counter = make_ddict(jsonfile,binsize)
-            chat_counter = make_ddict_in_range(
-                    jsonfile,binsize,start_date,end_date)
+        chat = pd.read_json(filepath)
+        chat_counter = make_ddict_in_range(chat,start_date,end_date)
 
         filenames.append(path.splitext(path.split(filepath)[-1])[0])
         #make filename just the name of the file,
