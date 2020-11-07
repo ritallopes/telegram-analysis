@@ -15,7 +15,7 @@ def main():
     filepath = args.filepath
 
     with open(filepath, 'r', encoding="utf-8") as f:
-    json_data = json.load(f)
+        json_data = json.load(f)
 
     with jsonlines.open(filepath+'l', 'w') as writer:
         writer.write_all(json_data)
